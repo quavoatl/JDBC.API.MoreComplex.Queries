@@ -50,8 +50,23 @@ public class Datasource {
                     TABLE_ARTISTS + "." + COLUMN_ARTIST_ID +
                     " WHERE " + TABLE_ARTISTS + "." + COLUMN_ARTIST_NAME + " = \"";
 
-    public static final String ORDER_BY_QUERY = "\" ORDER BY " + TABLE_ALBUMS + "." +
-                              COLUMN_ALBUM_NAME + " COLLATE NOCASE ";
+    public static final String ORDER_QUERY_ALBUM = " ORDER BY " + TABLE_ALBUMS + "." +
+            COLUMN_ALBUM_NAME + " COLLATE NOCASE ";
+
+    //select artists.name, albums.name, songs.track from songs
+    //inner join albums on songs.album = albums._id
+    //inner join artists on albums.artist = artists._id
+    //WHERE songs.title = "Go Your Own Way"
+    //ORDER BY albums.name COLLATE NOCASE DESC
+    public static final String QUERY_ARTIST_FOR_SONG_START =
+            "SELECT " + TABLE_ARTISTS + "." + COLUMN_ARTIST_NAME + "," + TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME +
+                    "," + TABLE_SONGS + "." + COLUMN_SONG_TRACK + " FROM SONGS " +
+                    "INNER JOIN " + TABLE_ALBUMS + " ON " + TABLE_SONGS + "." + COLUMN_SONG_ALBUM + " = " + TABLE_ALBUMS +
+                    "." + COLUMN_ALBUM_ID + " INNER JOIN " + TABLE_ARTISTS + " ON " + TABLE_ALBUMS + "." + COLUMN_ALBUM_ARTIST +
+                    " = " + TABLE_ARTISTS + "." + COLUMN_ARTIST_ID + " WHERE " + TABLE_SONGS + "." + COLUMN_SONG_TITLE +
+                    " = \"";
+    public static final String ORDER_QUERY_ARTIST_FOR_SONG =
+            " ORDER BY " + TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME + " COLLATE NOCASE ";
 
 
     private Connection conn;
@@ -155,8 +170,9 @@ public class Datasource {
 
         StringBuilder sb = new StringBuilder(QUERY_ALBUM_FOR_ARTIST_START);
         sb.append(artist);
-        if(sortOrder != ORDER_BY_NONE) {
-            sb.append(ORDER_BY_QUERY);
+        sb.append("\"");
+        if (sortOrder != ORDER_BY_NONE) {
+            sb.append(ORDER_QUERY_ALBUM);
             if (sortOrder == ORDER_BY_DESC) {
                 sb.append("DESC");
             } else {
@@ -182,6 +198,61 @@ public class Datasource {
         }
     }
 
+    public List<SongArtist> queryArtistForSong(String songName, int sortOrder) {
+
+        StringBuilder sb = new StringBuilder(QUERY_ARTIST_FOR_SONG_START);
+        sb.append(songName);
+        sb.append("\"");
+        if (sortOrder != ORDER_BY_NONE) {
+            sb.append(ORDER_QUERY_ARTIST_FOR_SONG);
+            if (sortOrder == ORDER_BY_DESC) {
+                sb.append("DESC");
+            } else {
+                sb.append("ASC");
+            }
+        }
+
+        System.out.println("SQL statement : " + sb.toString());
+
+        try (Statement statement = conn.createStatement();
+             ResultSet resultSet = statement.executeQuery(sb.toString())) {
+
+            List<SongArtist> artistForSong = new ArrayList<>();
+
+            while (resultSet.next()) {
+                SongArtist songArtist = new SongArtist();
+                songArtist.setArtistName(resultSet.getString(1));
+                songArtist.setAlbumName(resultSet.getString(2));
+                songArtist.setTrack(resultSet.getInt(3));
+                artistForSong.add(songArtist);
+            }
+            return artistForSong;
+
+
+        } catch (SQLException e) {
+            System.out.println("Something went wrong..." + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void querySongsMetaData() {
+        String sql = "SELECT * FROM " + TABLE_SONGS;
+
+        try (Statement statement = conn.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int numColumns = metaData.getColumnCount();
+
+            for (int i = 1; i <= numColumns; i++) {
+                System.out.format("Column %d in the songs table is names %s\n",
+                        i, metaData.getColumnName(i));
+            }
+        } catch (SQLException e) {
+            System.out.println("Something went wrong..." + e.getMessage());
+        }
+    }
 
 }
 
