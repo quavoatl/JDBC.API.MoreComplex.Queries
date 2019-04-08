@@ -29,7 +29,7 @@ public class Main {
             System.out.println(album);
         }
 
-        List<SongArtist> artistForSong = datasource.queryArtistForSong("Go Your Own Way",Datasource.ORDER_BY_NONE);
+        List<SongArtist> artistForSong = datasource.queryArtistForSong("Go Your Own Way",Datasource.ORDER_BY_ASC);
 
         for(SongArtist songArtist : artistForSong) {
             if(songArtist == null) {
@@ -39,6 +39,9 @@ public class Main {
                                 + ", Track : " + songArtist.getTrack());
         }
         
+        System.out.println(Datasource.CREATE_VIEW_ARTIST_LIST);
+        datasource.createViewForArtist();    
+           
         datasource.querySongsMetaData();
         datasource.close();
     }
