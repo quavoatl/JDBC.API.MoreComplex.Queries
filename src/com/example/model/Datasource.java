@@ -58,6 +58,7 @@ public class Datasource {
     //inner join artists on albums.artist = artists._id
     //WHERE songs.title = "Go Your Own Way"
     //ORDER BY albums.name COLLATE NOCASE DESC
+    
     public static final String QUERY_ARTIST_FOR_SONG_START =
             "SELECT " + TABLE_ARTISTS + "." + COLUMN_ARTIST_NAME + "," + TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME +
                     "," + TABLE_SONGS + "." + COLUMN_SONG_TRACK + " FROM SONGS " +
