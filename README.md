@@ -1,6 +1,6 @@
 # JDBC.API.MoreComplex.Queries
 
-**Using a defined database to perform queries**
+**Using an existing database to perform queries**
 
 **Creating a package -Datasource- with all the methods**
 
