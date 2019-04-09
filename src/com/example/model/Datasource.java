@@ -68,13 +68,42 @@ public class Datasource {
                     " = \"";
     public static final String ORDER_QUERY_ARTIST_FOR_SONG =
             " ORDER BY " + TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME + " COLLATE NOCASE ";
+    
+    ///CREATE VIEW IF NOT EXISTS artist_list AS
+//SELECT artists.name, albums.name AS album, songs.track, songs.title FROM songs
+//inner join albums on songs.album = albums._id
+//inner join artists on albums.artist = artists._id
+//order by artists.name
+    
+    public static final String VIEW_NAME = "artist_list";
+    public static final String CREATE_VIEW_ARTIST_LIST =
+            "CREATE VIEW IF NOT EXISTS " + VIEW_NAME + " AS SELECT " + TABLE_ARTISTS + "." + COLUMN_ARTIST_NAME + "," + TABLE_ALBUMS +
+                    "." + COLUMN_ALBUM_NAME + " AS " + COLUMN_SONG_ALBUM + ", " + TABLE_SONGS +
+                    "." + COLUMN_SONG_TRACK + ", " + TABLE_SONGS + "." + COLUMN_SONG_TITLE + " FROM " + TABLE_SONGS +
+                    " INNER JOIN " + TABLE_ALBUMS + " ON " + TABLE_SONGS + "." + COLUMN_SONG_ALBUM + " = " + TABLE_ALBUMS + "." +
+                    COLUMN_ALBUM_ID +
+                    " INNER JOIN " + TABLE_ARTISTS + " ON " + TABLE_ALBUMS + "." + COLUMN_ALBUM_ARTIST + " = " +
+                    TABLE_ARTISTS + "." + COLUMN_ARTIST_ID + " ORDER BY " + TABLE_ARTISTS + "." + COLUMN_ARTIST_NAME;
+
+    //SELECT name, album, track from artist_list where title = "Phantom Lord"
+
+    public static final String QUERY_VIEW_SONG_INFO =
+            "SELECT " + COLUMN_ARTIST_NAME + ", " + COLUMN_SONG_ALBUM + ", " + COLUMN_SONG_TRACK + " FROM " + VIEW_NAME +
+                    " WHERE " + COLUMN_SONG_TITLE + " = \"";
+
+    public static final String QUERY_VIEW_FOR_ARTIST_SONG_INFO_PREP =
+            "SELECT " + COLUMN_ARTIST_NAME + ", " + COLUMN_SONG_ALBUM + ", " + COLUMN_SONG_TRACK + " FROM " + VIEW_NAME +
+                    " WHERE " + COLUMN_SONG_TITLE + " = ?";
 
 
     private Connection conn;
+    private PreparedStatement querySongInfoView;
 
     public boolean open() {
         try {
             conn = DriverManager.getConnection(CONNECTION_STRING);
+            querySongInfoView = conn.prepareStatement(QUERY_VIEW_FOR_ARTIST_SONG_INFO_PREP);
+
             return true;
         } catch (SQLException e) {
             System.out.println("Something went wrong " + e.getMessage());
@@ -84,6 +113,10 @@ public class Datasource {
 
     public void close() {
         try {
+            if (querySongInfoView != null) {
+                querySongInfoView.close();
+            }
+
             if (conn != null) {
                 conn.close();
             }
@@ -140,7 +173,6 @@ public class Datasource {
         StringBuilder sb = new StringBuilder("SELECT * FROM ");
         sb.append(TABLE_ARTISTS);
         if (sortOrder != ORDER_BY_NONE) {
-
             if (sortOrder == ORDER_BY_DESC) {
                 sb.append("DESC");
             } else {
@@ -255,7 +287,8 @@ public class Datasource {
         }
     }
 
-     public boolean createViewForArtist() {
+
+    public boolean createViewForArtist() {
 
         try (Statement statement = conn.createStatement()) {
             statement.execute(CREATE_VIEW_ARTIST_LIST);
@@ -269,7 +302,28 @@ public class Datasource {
             return false;
         }
     }
-   
-    
-}
 
+    public List<SongArtist> queryViewForSong(String songName) {
+
+        try {
+            //Prepared Statement
+            querySongInfoView.setString(1, songName);
+            ResultSet resultSet = querySongInfoView.executeQuery();
+
+            List<SongArtist> nameAlbumTrack = new ArrayList<>();
+            while (resultSet.next()) {
+                SongArtist songArtist = new SongArtist();
+                songArtist.setArtistName(resultSet.getString(1));
+                songArtist.setAlbumName(resultSet.getString(2));
+                songArtist.setTrack(resultSet.getInt(3));
+                nameAlbumTrack.add(songArtist);
+            }
+            return nameAlbumTrack;
+
+        } catch (SQLException e) {
+            System.out.println("Something went wrong..." + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
