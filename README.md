@@ -6,7 +6,7 @@
 
 **Wrote different query methods, for example : queryAlbumsForArtist() , queryArtistForSong, createView()... using StringBuilder to concatenate the SQL statement**
 
-**Inserting a new Song, based on 3 methods, first check if artist is already in the database, second check if the album is already in the database, then perform the insertion - USING TRANSACTIONS BASE PRINCIPLES**
+**Inserting a new Song, based on 3 methods, first checks if artist is already in the database, second checks if the album is already in the database, then perform the insertion - USING TRANSACTIONS BASE PRINCIPLES**
 
 **Using PreparedStatement with placeholders to prevent SQL Injection Attacks**
 
